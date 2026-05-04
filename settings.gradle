@@ -1,0 +1,7 @@
+rootProject.name = 'Backend'
+
+include 'playbit-app'
+include 'playbit-common'
+include 'playbit-user'
+include 'playbit-market'
+include 'playbit-investment'

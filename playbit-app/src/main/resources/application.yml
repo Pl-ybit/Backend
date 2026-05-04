@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: playbit-app
+  datasource:
+    url: jdbc:postgresql://localhost:5432/playbit
+    username: postgres
+    password: password
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+server:
+  port: 8080

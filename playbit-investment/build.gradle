@@ -1,0 +1,6 @@
+dependencies {
+    implementation project(':playbit-common')
+}
+
+bootJar { enabled = false }
+jar { enabled = true }
