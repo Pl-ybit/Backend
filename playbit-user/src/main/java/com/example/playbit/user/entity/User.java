@@ -87,4 +87,8 @@ public class User extends BaseTimeEntity {
     public void withdraw() {
         this.status = Status.WITHDRAWN;
     }
+
+    public void verifyEmail() {
+        this.emailVerified = true;
+    }
 }
