@@ -13,7 +13,8 @@ public enum ErrorCode {
 
     // User
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U001", "이미 사용 중인 이메일입니다."),
-    INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "U002", "인증 코드가 올바르지 않거나 만료되었습니다.");
+    INVALID_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "U002", "인증 코드가 올바르지 않거나 만료되었습니다."),
+    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "U003", "이메일 또는 비밀번호가 올바르지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
