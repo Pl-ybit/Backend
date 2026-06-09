@@ -1,6 +1,8 @@
 package com.example.playbit.user.controller;
 
 import com.example.playbit.common.response.ApiResponse;
+import com.example.playbit.user.dto.LoginRequest;
+import com.example.playbit.user.dto.LoginResponse;
 import com.example.playbit.user.dto.SignupRequest;
 import com.example.playbit.user.dto.SignupResponse;
 import com.example.playbit.user.dto.VerifyEmailRequest;
@@ -21,6 +23,11 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
         return ApiResponse.created(userService.signup(request));
+    }
+
+    @PostMapping("/login")
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ApiResponse.ok(userService.login(request));
     }
 
     @PostMapping("/verify-email")

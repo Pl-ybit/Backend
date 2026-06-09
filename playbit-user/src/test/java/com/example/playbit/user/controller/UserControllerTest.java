@@ -3,6 +3,8 @@ package com.example.playbit.user.controller;
 import com.example.playbit.common.exception.ErrorCode;
 import com.example.playbit.common.exception.GlobalExceptionHandler;
 import com.example.playbit.common.exception.PlaybitException;
+import com.example.playbit.user.dto.LoginRequest;
+import com.example.playbit.user.dto.LoginResponse;
 import com.example.playbit.user.dto.SignupRequest;
 import com.example.playbit.user.dto.SignupResponse;
 import com.example.playbit.user.dto.VerifyEmailRequest;
@@ -107,5 +109,32 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("U002"));
+    }
+
+    @Test
+    @DisplayName("로그인 성공 시 200 OK와 accessToken을 반환한다")
+    void login_성공_200() throws Exception {
+        LoginRequest request = new LoginRequest("test@example.com", "password123");
+        given(userService.login(any())).willReturn(new LoginResponse("mocked.jwt.token"));
+
+        mockMvc.perform(post("/api/v1/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").value("mocked.jwt.token"));
+    }
+
+    @Test
+    @DisplayName("이메일/비밀번호 불일치 시 401 Unauthorized와 ErrorResponse를 반환한다")
+    void login_불일치_401() throws Exception {
+        LoginRequest request = new LoginRequest("test@example.com", "wrong_password");
+        given(userService.login(any())).willThrow(new PlaybitException(ErrorCode.LOGIN_FAILED));
+
+        mockMvc.perform(post("/api/v1/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("U003"));
     }
 }

@@ -2,10 +2,14 @@ package com.example.playbit.user.service;
 
 import com.example.playbit.common.exception.ErrorCode;
 import com.example.playbit.common.exception.PlaybitException;
+import com.example.playbit.common.jwt.JwtProvider;
+import com.example.playbit.user.dto.LoginRequest;
+import com.example.playbit.user.dto.LoginResponse;
 import com.example.playbit.user.dto.SignupRequest;
 import com.example.playbit.user.dto.SignupResponse;
 import com.example.playbit.user.dto.VerifyEmailRequest;
 import com.example.playbit.user.entity.User;
+import com.example.playbit.user.entity.UserAuth;
 import com.example.playbit.user.repository.UserAuthRepository;
 import com.example.playbit.user.repository.UserProfileRepository;
 import com.example.playbit.user.repository.UserRepository;
@@ -16,12 +20,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -34,6 +42,7 @@ class UserServiceTest {
     @Mock private UserProfileRepository userProfileRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private EmailVerificationService emailVerificationService;
+    @Mock private JwtProvider jwtProvider;
 
     @InjectMocks
     private UserService userService;
@@ -93,5 +102,53 @@ class UserServiceTest {
                 .isInstanceOf(PlaybitException.class)
                 .satisfies(e -> assertThat(((PlaybitException) e).getErrorCode())
                         .isEqualTo(ErrorCode.RESOURCE_NOT_FOUND));
+    }
+
+    @Test
+    @DisplayName("이메일과 비밀번호가 일치하면 accessToken을 반환한다")
+    void login_성공() {
+        LoginRequest request = new LoginRequest("test@example.com", "password123");
+        User user = User.createLocal("test@example.com");
+        ReflectionTestUtils.setField(user, "id", 1L);
+        UserAuth userAuth = UserAuth.createFor(user, "hashed_password");
+
+        given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
+        given(userAuthRepository.findByUser(user)).willReturn(Optional.of(userAuth));
+        given(passwordEncoder.matches("password123", "hashed_password")).willReturn(true);
+        given(jwtProvider.generate(1L, "test@example.com", "USER", false))
+                .willReturn("mocked.jwt.token");
+
+        LoginResponse response = userService.login(request);
+
+        assertThat(response.accessToken()).isEqualTo("mocked.jwt.token");
+    }
+
+    @Test
+    @DisplayName("이메일이 없으면 LOGIN_FAILED 예외를 던진다")
+    void login_이메일없음_예외() {
+        LoginRequest request = new LoginRequest("none@example.com", "password123");
+        given(userRepository.findByEmail("none@example.com")).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.login(request))
+                .isInstanceOf(PlaybitException.class)
+                .satisfies(e -> assertThat(((PlaybitException) e).getErrorCode())
+                        .isEqualTo(ErrorCode.LOGIN_FAILED));
+    }
+
+    @Test
+    @DisplayName("비밀번호가 불일치하면 LOGIN_FAILED 예외를 던진다")
+    void login_비밀번호불일치_예외() {
+        LoginRequest request = new LoginRequest("test@example.com", "wrong_password");
+        User user = User.createLocal("test@example.com");
+        UserAuth userAuth = UserAuth.createFor(user, "hashed_password");
+
+        given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
+        given(userAuthRepository.findByUser(user)).willReturn(Optional.of(userAuth));
+        given(passwordEncoder.matches("wrong_password", "hashed_password")).willReturn(false);
+
+        assertThatThrownBy(() -> userService.login(request))
+                .isInstanceOf(PlaybitException.class)
+                .satisfies(e -> assertThat(((PlaybitException) e).getErrorCode())
+                        .isEqualTo(ErrorCode.LOGIN_FAILED));
     }
 }

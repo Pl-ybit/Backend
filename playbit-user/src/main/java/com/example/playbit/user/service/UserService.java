@@ -2,6 +2,9 @@ package com.example.playbit.user.service;
 
 import com.example.playbit.common.exception.ErrorCode;
 import com.example.playbit.common.exception.PlaybitException;
+import com.example.playbit.common.jwt.JwtProvider;
+import com.example.playbit.user.dto.LoginRequest;
+import com.example.playbit.user.dto.LoginResponse;
 import com.example.playbit.user.dto.SignupRequest;
 import com.example.playbit.user.dto.SignupResponse;
 import com.example.playbit.user.dto.VerifyEmailRequest;
@@ -25,6 +28,7 @@ public class UserService {
     private final UserProfileRepository userProfileRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
+    private final JwtProvider jwtProvider;
 
     @Transactional
     public SignupResponse signup(SignupRequest request) {
@@ -39,6 +43,26 @@ public class UserService {
         emailVerificationService.sendVerificationCode(request.email());
 
         return new SignupResponse(user.getId(), user.getEmail());
+    }
+
+    @Transactional
+    public LoginResponse login(LoginRequest request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new PlaybitException(ErrorCode.LOGIN_FAILED));
+
+        UserAuth userAuth = userAuthRepository.findByUser(user)
+                .orElseThrow(() -> new PlaybitException(ErrorCode.LOGIN_FAILED));
+
+        if (!passwordEncoder.matches(request.password(), userAuth.getPasswordHash())) {
+            throw new PlaybitException(ErrorCode.LOGIN_FAILED);
+        }
+
+        user.updateLastLogin();
+
+        String token = jwtProvider.generate(
+                user.getId(), user.getEmail(), user.getRole().name(), user.isEmailVerified()
+        );
+        return new LoginResponse(token);
     }
 
     @Transactional
