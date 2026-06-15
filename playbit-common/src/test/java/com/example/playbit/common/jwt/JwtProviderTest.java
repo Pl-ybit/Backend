@@ -59,4 +59,18 @@ class JwtProviderTest {
 
         assertThat(jwtProvider.isValid(tampered)).isFalse();
     }
+
+    @Test
+    void 토큰에서_userId를_추출한다() {
+        String token = jwtProvider.generate(42L, "user@test.com", "USER", true);
+
+        assertThat(jwtProvider.extractUserId(token)).isEqualTo(42L);
+    }
+
+    @Test
+    void 토큰에서_role을_추출한다() {
+        String token = jwtProvider.generate(1L, "user@test.com", "ADMIN", false);
+
+        assertThat(jwtProvider.extractRole(token)).isEqualTo("ADMIN");
+    }
 }

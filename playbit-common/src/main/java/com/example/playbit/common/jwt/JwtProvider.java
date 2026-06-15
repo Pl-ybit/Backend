@@ -54,4 +54,12 @@ public class JwtProvider {
             return false;
         }
     }
+
+    public Long extractUserId(String token) {
+        return Long.parseLong(parse(token).getSubject());
+    }
+
+    public String extractRole(String token) {
+        return parse(token).get("role", String.class);
+    }
 }
