@@ -51,10 +51,10 @@ class CorsConfigTest {
     @DisplayName("허용된 localhost:3000 Origin의 Preflight 요청에 CORS 헤더가 반환된다")
     void 허용된_Origin_Preflight_CORS헤더_반환() throws Exception {
         mockMvc.perform(options("/api/v1/test/secured")
-                        .header(HttpHeaders.ORIGIN, "http://localhost:3000")
+                        .header(HttpHeaders.ORIGIN, "http://localhost:5173")
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, HttpMethod.GET.name()))
                 .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:3000"));
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:5173"));
     }
 
     @Test

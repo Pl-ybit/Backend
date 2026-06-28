@@ -1,6 +1,7 @@
 package com.example.playbit.security;
 
 import com.example.playbit.common.jwt.JwtProvider;
+import com.example.playbit.config.CorsConfig;
 import com.example.playbit.config.SecurityConfig;
 import com.example.playbit.helper.TestSecurityController;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +76,7 @@ class SecurityConfigTest {
     }
 
     @EnableWebMvc
-    @Import({SecurityConfig.class, JwtAuthenticationFilter.class, JwtAuthenticationEntryPoint.class})
+    @Import({SecurityConfig.class, CorsConfig.class, JwtAuthenticationFilter.class, JwtAuthenticationEntryPoint.class})
     @Configuration
     static class MinimalWebConfig {
 
